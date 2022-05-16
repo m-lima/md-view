@@ -1,0 +1,10 @@
+[package]
+name = "md-view"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+color-eyre = "0.6"
+pulldown-cmark = "0.9"
+web-view = { git = "https://github.com/Boscop/web-view", ref = "e87e08cab3a2d500d54068ec9c7aaa055a711465" }
+# wry = "0.16.2"

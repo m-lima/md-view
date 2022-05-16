@@ -5,6 +5,6 @@ edition = "2021"
 
 [dependencies]
 color-eyre = "0.6"
+notify = "4.0.17"
 pulldown-cmark = "0.9"
 web-view = { git = "https://github.com/Boscop/web-view", ref = "e87e08cab3a2d500d54068ec9c7aaa055a711465" }
-# wry = "0.16.2"

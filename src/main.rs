@@ -11,23 +11,17 @@ impl Html {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>"#,
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/pico.min.css")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/style.css")),
             r#"
         </style>
         <script type="text/javascript">"#,
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/loader.js")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/script.js")),
             r#"
         </script>
-        <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
-        <script type"text/javascript">
-            function looper() {
-                external.invoke('refresh');
-                setTimeout(looper, 5000);
-            }
-            looper()
-        </script>
     </head>
-    <body style="padding: 20px"><div id="md">"#,
+    <body>
+        <button onClick="toggleMode()">Theme</button>
+        <div id="md">"#,
         )))
     }
 

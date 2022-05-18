@@ -94,7 +94,7 @@ table > thead > tr > th {
 }
 
 table > thead > tr > th > strong {
-  color: var(--color-2);
+  color: var(--color-mute);
 }
 
 table td {

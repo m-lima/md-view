@@ -217,8 +217,14 @@ impl winit::application::ApplicationHandler for App {
         _window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
-        if let winit::event::WindowEvent::Resized(size) = event {
-            self.handle.resize(size);
+        match event {
+            winit::event::WindowEvent::Resized(size) => {
+                self.handle.resize(size);
+            }
+            winit::event::WindowEvent::Destroyed | winit::event::WindowEvent::CloseRequested => {
+                event_loop.exit();
+            }
+            _ => {}
         }
         self.update(event_loop);
     }
@@ -228,10 +234,6 @@ impl winit::application::ApplicationHandler for App {
         event_loop: &winit::event_loop::ActiveEventLoop,
         _cause: winit::event::StartCause,
     ) {
-        self.update(event_loop);
-    }
-
-    fn user_event(&mut self, event_loop: &winit::event_loop::ActiveEventLoop, _event: ()) {
         self.update(event_loop);
     }
 

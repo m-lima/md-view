@@ -9,3 +9,16 @@ function toggleMode() {
 function updateMarkdown(html) {
   document.getElementById('md').innerHTML = html;
 }
+
+function updatePadding(value) {
+  const padderValue = document.getElementById('padder-value');
+  if (!!padderValue) {
+    padderValue.textContent = `${value}%`
+  }
+
+  const padder = document.getElementById('padder');
+  if (!!padder) {
+    padder.style['padding-right'] = `${value}%`
+    padder.style['padding-left'] = `${value}%`
+  }
+}

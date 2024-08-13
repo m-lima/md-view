@@ -6,7 +6,7 @@ impl Html {
             "{}{}{}",
             concat!(
                 r#"
-<html data-theme="dark">
+<html data-theme="dark" style="margin: 0; padding: 0">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,10 +20,32 @@ impl Html {
             r#"
         </style>
     </head>
-    <body>
-        <div style="display: flex; flex-direction: column; gap: 10px; height: 100%">
-            <div style="-webkit-user-select: none; user-select: none; align-self: end; cursor: pointer; border: solid 1px currentcolor; border-radius: 4px; padding: 4px;" onClick="toggleMode()">Theme</div>
-            <div id="md" style="overflow:auto">"#,
+    <body style="margin: 0; padding: 0">
+        <div style="display: flex; flex-direction: column; height: 100%">
+            <div style="all: unset; align-self: end; display: flex; flex-direction: row; gap: 10px; padding: 10px">
+                <span
+                    id="padder-value"
+                    style="all: unset; align-self: center; font-weight: bolder"
+                >
+                    1%
+                </span>
+                <input
+                    style="all: unset"
+                    type="range"
+                    min="0"
+                    max="50"
+                    value="1"
+                    onInput="updatePadding(this.value)"
+                />
+                <button
+                    style="all: unset; cursor: pointer; border: solid 1px currentcolor; border-radius: 4px; padding: 4px"
+                    onClick="toggleMode()"
+                >
+                    Theme
+                </button>
+            </div>
+            <div id="padder" style="all: unset; overflow: auto; padding: 1%; border-top: solid 1px currentcolor">
+            <div id="md">"#,
         ))
     }
 
@@ -32,7 +54,7 @@ impl Html {
     }
 
     fn done(mut self) -> String {
-        self.0.push_str("</div></div></body></html>");
+        self.0.push_str("</div></div></div></body></html>");
         self.0
     }
 }

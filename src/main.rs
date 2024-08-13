@@ -1,33 +1,30 @@
 struct Html(String);
 
 impl Html {
-    fn new() -> Self {
-        Self(String::from(concat!(
-            r#"
+    fn new(style: &str) -> Self {
+        Self(format!(
+            "{}{}{}",
+            concat!(
+                r#"
 <html data-theme="dark">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>"#,
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/res/styles/notes.css")),
+        <script type="text/javascript">"#,
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/script.js")),
+                r#"
+        </script>
+        <style>"#
+            ),
+            style,
             r#"
         </style>
-        <script type="text/javascript">"#,
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/script.js")),
-            r#"
-        </script>
     </head>
     <body>
-        <button onClick="toggleMode()">Theme</button>
-        <select
-          value="notes"
-          onInput="e => setStyle(e.currentTarget.value)"
-        />
-            <option value="default">Default</option>
-            <option value="notes">Notes</option>
-        </select>
-        <div id="md">"#,
-        )))
+        <div style="display: flex; flex-direction: column; gap: 10px; height: 100%">
+            <div style="-webkit-user-select: none; user-select: none; align-self: end; cursor: pointer; border: solid 1px currentcolor; border-radius: 4px; padding: 4px;" onClick="toggleMode()">Theme</div>
+            <div id="md" style="overflow:auto">"#,
+        ))
     }
 
     fn buffer(&mut self) -> &mut String {
@@ -35,7 +32,7 @@ impl Html {
     }
 
     fn done(mut self) -> String {
-        self.0.push_str("</div></body></html>");
+        self.0.push_str("</div></div></body></html>");
         self.0
     }
 }
@@ -108,10 +105,21 @@ impl Handle {
             });
         }
     }
+
+    fn toggle_dev_tools(&self) {
+        if let Self::Init { webview, .. } = self {
+            if webview.is_devtools_open() {
+                webview.close_devtools();
+            } else {
+                webview.open_devtools();
+            }
+        }
+    }
 }
 
 struct App {
     path: String,
+    style: &'static str,
     buffer: String,
     change_rx: std::sync::mpsc::Receiver<notify::Result<notify::Event>>,
     handle: Handle,
@@ -119,11 +127,12 @@ struct App {
 }
 
 impl App {
-    fn new(path: String) -> eyre::Result<Self> {
+    fn new(path: String, style: &'static str) -> eyre::Result<Self> {
         let (change_rx, watcher) = watch(&path)?;
 
         Ok(Self {
             path,
+            style,
             buffer: String::new(),
             change_rx,
             handle: Handle::Empty,
@@ -141,14 +150,14 @@ impl App {
                 .with_inner_size(winit::dpi::LogicalSize::new(1024, 768)),
         )?;
 
-        let body = {
-            let mut html = Html::new();
+        let html = {
+            let mut html = Html::new(self.style);
             render(&path, html.buffer())?;
             html.done()
         };
 
         let webview = wry::WebViewBuilder::new_as_child(&window)
-            .with_html(body.as_str())
+            .with_html(html.as_str())
             .build()?;
 
         self.handle = Handle::Init {
@@ -224,6 +233,16 @@ impl winit::application::ApplicationHandler for App {
             winit::event::WindowEvent::Destroyed | winit::event::WindowEvent::CloseRequested => {
                 event_loop.exit();
             }
+            winit::event::WindowEvent::KeyboardInput {
+                event:
+                    winit::event::KeyEvent {
+                        logical_key: winit::keyboard::Key::Named(winit::keyboard::NamedKey::Escape),
+                        ..
+                    },
+                ..
+            } => {
+                self.handle.toggle_dev_tools();
+            }
             _ => {}
         }
         self.update(event_loop);
@@ -247,12 +266,29 @@ impl winit::application::ApplicationHandler for App {
     }
 }
 
-fn main() -> eyre::Result<()> {
-    let path = std::env::args()
-        .nth(1)
+fn args() -> eyre::Result<(String, &'static str)> {
+    let mut args = std::env::args().skip(1);
+
+    let path = args
+        .next()
         .ok_or_else(|| eyre::eyre!("Missing file parameter"))?;
 
-    let mut app = App::new(path)?;
+    let style = match args.next().as_deref() {
+        Some("notes") => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/res/styles/notes.css")),
+        Some("pico") => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/res/styles/pico.css")),
+        None | Some(_) => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/res/styles/github.css"
+        )),
+    };
+
+    Ok((path, style))
+}
+
+fn main() -> eyre::Result<()> {
+    let (path, style) = args()?;
+
+    let mut app = App::new(path, style)?;
 
     let event_loop = winit::event_loop::EventLoop::new()?;
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
